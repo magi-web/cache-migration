@@ -1,0 +1,40 @@
+services:
+#    mgi_core.example:
+#        class: Mgi\CoreBundle\Example
+#        arguments: ["@service_id", "plain_value", "%parameter%"]
+  core.migrate.manager:
+      class: Mgi\CoreBundle\Migration\Manager
+      arguments: ["@doctrine.orm.entity_manager","@monolog.logger", "@core.migrate.resource_installer"]
+      calls:
+        - method: initBundles
+          arguments:
+              - '@kernel'
+  core.migrate.import:
+      class: Mgi\CoreBundle\Migration\ImportManager
+      arguments: ["@doctrine.orm.entity_manager","@monolog.logger", "@core.migrate.manager"]
+
+  core.migrate.export:
+      class: Mgi\CoreBundle\Migration\ExportManager
+      arguments: ["@doctrine.orm.entity_manager","@monolog.logger", "@core.migrate.manager"]
+
+  core.migrate.resource_installer:
+      class: Mgi\CoreBundle\Migration\ResourceInstaller
+      arguments: ["@doctrine.orm.entity_manager"]
+
+  core.warmer.migration:
+        class: Mgi\CoreBundle\Cache\CacheWarmup
+        arguments: ["@core.migrate.import"]
+        tags:
+            - { name: kernel.cache_warmer, priority: 100 }
+
+  core.migrate.diff.command:
+      class: Mgi\CoreBundle\Command\MigrationDiffCommand
+      arguments: ["@core.migrate.export"]
+      tags:
+            - { name: console.command}
+
+  core.migrate.migrate.command:
+      class: Mgi\CoreBundle\Command\MigrationMigrateCommand
+      arguments: ["@core.migrate.import"]
+      tags:
+            - { name: console.command}

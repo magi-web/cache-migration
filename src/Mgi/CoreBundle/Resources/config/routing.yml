@@ -1,0 +1,3 @@
+mgi_core_homepage:
+    path:     /
+    defaults: { _controller: MgiCoreBundle:Default:index }
